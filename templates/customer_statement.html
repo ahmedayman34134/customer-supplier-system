@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}كشف حساب العميل - {{ customer.name }}{% endblock %}
+{% block page_title %}كشف حساب العميل{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-file-alt me-2"></i>
+                    كشف حساب العميل: {{ customer.name }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Customer Info -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">معلومات العميل</h6>
+                                <p class="mb-1"><strong>الاسم:</strong> {{ customer.name }}</p>
+                                <p class="mb-1"><strong>الهاتف:</strong> {{ customer.phone or 'غير محدد' }}</p>
+                                <p class="mb-1"><strong>البريد الإلكتروني:</strong> {{ customer.email or 'غير محدد' }}</p>
+                                <p class="mb-0"><strong>تاريخ الإضافة:</strong> {{ customer.created_at.strftime('%Y-%m-%d') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card {% if customer.balance > 0 %}bg-success{% elif customer.balance < 0 %}bg-danger{% else %}bg-secondary{% endif %} text-white">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">الرصيد الحالي</h6>
+                                <h3 class="mb-0">{{ "{:,.2f}".format(customer.balance) }} ج.م</h3>
+                                <small>
+                                    {% if customer.balance > 0 %}
+                                        مدين للشركة
+                                    {% elif customer.balance < 0 %}
+                                        دائن للعميل
+                                    {% else %}
+                                        متوازن
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Statement -->
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="mb-3">تفاصيل الحساب</h6>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>التاريخ</th>
+                                        <th>النوع</th>
+                                        <th>الوصف</th>
+                                        <th>مدين</th>
+                                        <th>دائن</th>
+                                        <th>الرصيد</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% set running_balance = 0 %}
+                                    {% set transactions = [] %}
+                                    
+                                    <!-- Collect all transactions -->
+                                    {% for invoice in invoices %}
+                                        {% set _ = transactions.append({
+                                            'date': invoice.invoice_date,
+                                            'type': 'فاتورة مبيعات',
+                                            'description': 'فاتورة رقم: ' + invoice.invoice_number + ' - ' + (invoice.description or ''),
+                                            'debit': invoice.amount,
+                                            'credit': 0
+                                        }) %}
+                                    {% endfor %}
+                                    
+                                    {% for collection in collections %}
+                                        {% set _ = transactions.append({
+                                            'date': collection.collection_date,
+                                            'type': 'تحصيل',
+                                            'description': 'تحصيل - ' + (collection.notes or ''),
+                                            'debit': 0,
+                                            'credit': collection.amount
+                                        }) %}
+                                    {% endfor %}
+                                    
+                                    <!-- Sort transactions by date -->
+                                    {% set sorted_transactions = transactions|sort(attribute='date') %}
+                                    
+                                    {% if sorted_transactions %}
+                                        {% for transaction in sorted_transactions %}
+                                            {% set running_balance = running_balance + transaction.debit - transaction.credit %}
+                                            <tr>
+                                                <td>{{ transaction.date.strftime('%Y-%m-%d') }}</td>
+                                                <td>
+                                                    <span class="badge {% if transaction.type == 'فاتورة مبيعات' %}bg-primary{% else %}bg-success{% endif %}">
+                                                        {{ transaction.type }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ transaction.description }}</td>
+                                                <td class="text-danger">
+                                                    {% if transaction.debit > 0 %}
+                                                        {{ "{:,.2f}".format(transaction.debit) }}
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-success">
+                                                    {% if transaction.credit > 0 %}
+                                                        {{ "{:,.2f}".format(transaction.credit) }}
+                                                    {% endif %}
+                                                </td>
+                                                <td class="{% if running_balance > 0 %}text-danger{% elif running_balance < 0 %}text-success{% endif %}">
+                                                    {{ "{:,.2f}".format(running_balance) }}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">لا توجد معاملات لهذا العميل</td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6>إجمالي الفواتير</h6>
+                                <h5 class="text-danger">{{ "{:,.2f}".format(invoices|sum(attribute='amount') or 0) }} ج.م</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6>إجمالي التحصيلات</h6>
+                                <h5 class="text-success">{{ "{:,.2f}".format(collections|sum(attribute='amount') or 0) }} ج.م</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6>الرصيد النهائي</h6>
+                                <h5 class="{% if customer.balance > 0 %}text-danger{% elif customer.balance < 0 %}text-success{% endif %}">
+                                    {{ "{:,.2f}".format(customer.balance) }} ج.م
+                                </h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{{ url_for('customers') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        رجوع للعملاء
+                    </a>
+                    <div>
+                        <button class="btn btn-info me-2" onclick="window.print()">
+                            <i class="fas fa-print me-2"></i>
+                            طباعة
+                        </button>
+                        <a href="#" class="btn btn-success">
+                            <i class="fas fa-file-excel me-2"></i>
+                            تصدير Excel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .btn, .sidebar, .navbar {
+        display: none !important;
+    }
+    .main-content {
+        margin-right: 0 !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+{% endblock %}

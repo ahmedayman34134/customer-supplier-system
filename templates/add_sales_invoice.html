@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}إضافة فاتورة مبيعات - نظام إدارة العملاء والموردين{% endblock %}
+{% block page_title %}إضافة فاتورة مبيعات{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-file-invoice me-2"></i>
+                    إضافة فاتورة مبيعات جديدة
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="invoice_number" class="form-label">رقم الفاتورة *</label>
+                            <input type="text" class="form-control" id="invoice_number" name="invoice_number" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="customer_id" class="form-label">العميل *</label>
+                            <select class="form-select" id="customer_id" name="customer_id" required>
+                                <option value="">اختر العميل</option>
+                                {% for customer in customers %}
+                                <option value="{{ customer.id }}">{{ customer.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="invoice_date" class="form-label">تاريخ الفاتورة *</label>
+                            <input type="date" class="form-control" id="invoice_date" name="invoice_date" value="{{ today }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="amount" class="form-label">المبلغ *</label>
+                            <input type="number" step="0.01" class="form-control" id="amount" name="amount" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">الوصف</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('sales_invoices') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            رجوع
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>
+                            حفظ الفاتورة
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

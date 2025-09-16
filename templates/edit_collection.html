@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}تعديل تحصيل - نظام إدارة العملاء والموردين{% endblock %}
+{% block page_title %}تعديل تحصيل{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>تعديل تحصيل</h2>
+    <a href="{{ url_for('collections') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-right me-2"></i>
+        العودة للقائمة
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">تعديل التحصيل رقم: {{ collection.id }}</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="customer_id" class="form-label">العميل</label>
+                        <select class="form-select" id="customer_id" name="customer_id" required>
+                            <option value="">اختر العميل</option>
+                            {% for customer in customers %}
+                            <option value="{{ customer.id }}" 
+                                    {% if customer.id == collection.customer_id %}selected{% endif %}>
+                                {{ customer.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">المبلغ المحصل</label>
+                        <input type="number" step="0.01" class="form-control" id="amount" name="amount" 
+                               value="{{ collection.amount }}" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="collection_date" class="form-label">تاريخ التحصيل</label>
+                        <input type="date" class="form-control" id="collection_date" name="collection_date" 
+                               value="{{ collection.collection_date.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="notes" class="form-label">ملاحظات</label>
+                <textarea class="form-control" id="notes" name="notes" rows="3">{{ collection.notes or '' }}</textarea>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save me-2"></i>
+                    حفظ التعديلات
+                </button>
+                <a href="{{ url_for('view_collection', collection_id=collection.id) }}" class="btn btn-info">
+                    <i class="fas fa-eye me-2"></i>
+                    عرض التحصيل
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

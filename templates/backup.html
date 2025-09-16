@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}النسخ الاحتياطي - نظام إدارة العملاء والموردين{% endblock %}
+{% block page_title %}النسخ الاحتياطي{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-download me-2"></i>
+                    إنشاء نسخة احتياطية
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">قم بإنشاء نسخة احتياطية من قاعدة البيانات لحفظ جميع بياناتك بأمان.</p>
+                <button class="btn btn-warning" onclick="createBackup()">
+                    <i class="fas fa-download me-2"></i>
+                    تحميل نسخة احتياطية
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-upload me-2"></i>
+                    استعادة نسخة احتياطية
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">قم باستعادة نسخة احتياطية سابقة لاستعادة البيانات.</p>
+                <div class="mb-3">
+                    <input type="file" class="form-control" id="restore-file" accept=".db" onchange="restoreBackup(this)">
+                </div>
+                <button class="btn btn-info" onclick="document.getElementById('restore-file').click()">
+                    <i class="fas fa-upload me-2"></i>
+                    اختيار ملف للاستعادة
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    معلومات مهمة
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning" role="alert">
+                    <h6 class="alert-heading">تنبيه مهم:</h6>
+                    <ul class="mb-0">
+                        <li>يُنصح بإنشاء نسخة احتياطية بانتظام لحماية بياناتك</li>
+                        <li>عند استعادة نسخة احتياطية، سيتم حفظ النسخة الحالية تلقائياً</li>
+                        <li>تأكد من أن ملف النسخة الاحتياطية صحيح قبل الاستعادة</li>
+                        <li>النسخ الاحتياطية تحتوي على جميع البيانات: العملاء، الموردين، الفواتير، والتحصيلات</li>
+                    </ul>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <i class="fas fa-database fa-2x text-primary mb-2"></i>
+                                <h6>حجم قاعدة البيانات</h6>
+                                <small class="text-muted">يتم حساب الحجم تلقائياً</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <i class="fas fa-clock fa-2x text-success mb-2"></i>
+                                <h6>آخر نسخة احتياطية</h6>
+                                <small class="text-muted">لم يتم إنشاء نسخة بعد</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <i class="fas fa-shield-alt fa-2x text-warning mb-2"></i>
+                                <h6>حالة النظام</h6>
+                                <small class="text-success">يعمل بشكل طبيعي</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function restoreBackup(input) {
+    if (input.files.length > 0) {
+        const file = input.files[0];
+        
+        if (!file.name.endsWith('.db')) {
+            alert('يرجى اختيار ملف نسخة احتياطية صحيح (.db)');
+            return;
+        }
+        
+        if (confirm('هل أنت متأكد من استعادة هذه النسخة الاحتياطية؟ سيتم حفظ النسخة الحالية تلقائياً.')) {
+            const formData = new FormData();
+            formData.append('backup_file', file);
+            
+            // Show loading
+            const button = document.querySelector('.btn-info');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري الاستعادة...';
+            button.disabled = true;
+            
+            fetch('/backup', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('تم استعادة النسخة الاحتياطية بنجاح');
+                    location.reload();
+                } else {
+                    alert('حدث خطأ في استعادة النسخة الاحتياطية: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('حدث خطأ في استعادة النسخة الاحتياطية');
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+        }
+    }
+}
+
+function createBackup() {
+    const button = document.querySelector('.btn-warning');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري إنشاء النسخة...';
+    button.disabled = true;
+    
+    fetch('/backup', {
+        method: 'GET'
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.blob();
+        }
+        throw new Error('فشل في إنشاء النسخة الاحتياطية');
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'backup_' + new Date().toISOString().split('T')[0] + '.db';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        alert('تم إنشاء النسخة الاحتياطية بنجاح');
+    })
+    .catch(error => {
+        alert('حدث خطأ في إنشاء النسخة الاحتياطية');
+        console.error('Error:', error);
+    })
+    .finally(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+    });
+}
+</script>
+{% endblock %}

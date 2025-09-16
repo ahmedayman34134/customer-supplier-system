@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إيصال تحصيل - {{ collection.id }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            text-align: right;
+            margin: 0;
+            padding: 20px;
+            background: white;
+        }
+        .receipt-header {
+            text-align: center;
+            border-bottom: 3px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .company-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .receipt-title {
+            font-size: 20px;
+            color: #666;
+        }
+        .receipt-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .receipt-info, .customer-info {
+            width: 48%;
+        }
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .info-table th {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border: 1px solid #ddd;
+            font-weight: bold;
+        }
+        .info-table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        .amount-section {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .total-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #28a745;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border: 2px solid #28a745;
+            border-radius: 5px;
+            display: inline-block;
+            min-width: 200px;
+        }
+        .notes-section {
+            margin-top: 30px;
+        }
+        .notes-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .notes-content {
+            border: 1px solid #ddd;
+            padding: 15px;
+            background-color: #f8f9fa;
+            min-height: 60px;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt-header">
+        <div class="company-name">نظام إدارة العملاء والموردين</div>
+        <div class="receipt-title">إيصال تحصيل</div>
+    </div>
+
+    <div class="receipt-details">
+        <div class="receipt-info">
+            <table class="info-table">
+                <tr>
+                    <th>رقم الإيصال</th>
+                    <td>{{ collection.id }}</td>
+                </tr>
+                <tr>
+                    <th>تاريخ التحصيل</th>
+                    <td>{{ collection.collection_date.strftime('%Y-%m-%d') }}</td>
+                </tr>
+                <tr>
+                    <th>تاريخ الطباعة</th>
+                    <td><span id="printDate"></span></td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="customer-info">
+            <table class="info-table">
+                <tr>
+                    <th>اسم العميل</th>
+                    <td>{{ collection.customer.name }}</td>
+                </tr>
+                <tr>
+                    <th>هاتف العميل</th>
+                    <td>{{ collection.customer.phone or '-' }}</td>
+                </tr>
+                <tr>
+                    <th>بريد العميل</th>
+                    <td>{{ collection.customer.email or '-' }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="amount-section">
+        <div>المبلغ المحصل</div>
+        <div class="total-amount">{{ "{:,.2f}".format(collection.amount) }} جنيه مصري</div>
+    </div>
+
+    {% if collection.notes %}
+    <div class="notes-section">
+        <div class="notes-title">ملاحظات:</div>
+        <div class="notes-content">{{ collection.notes }}</div>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <p>تم إنشاء هذا الإيصال بواسطة نظام إدارة العملاء والموردين</p>
+        <p>تاريخ الطباعة: <span id="printDate2"></span></p>
+    </div>
+
+    <script>
+        const printDate = new Date().toLocaleDateString('ar-EG');
+        document.getElementById('printDate').textContent = printDate;
+        document.getElementById('printDate2').textContent = printDate;
+        window.onload = function() {
+            window.print();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}تعديل بيانات المورد - نظام إدارة العملاء والموردين{% endblock %}
+{% block page_title %}تعديل بيانات المورد{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-edit me-2"></i>
+                    تعديل بيانات المورد: {{ supplier.name }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">اسم المورد *</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ supplier.name }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="phone" class="form-label">رقم الهاتف</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" value="{{ supplier.phone or '' }}">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">البريد الإلكتروني</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ supplier.email or '' }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="address" class="form-label">العنوان</label>
+                        <textarea class="form-control" id="address" name="address" rows="3">{{ supplier.address or '' }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>الرصيد الحالي:</strong> 
+                            <span class="badge {% if supplier.balance >= 0 %}bg-success{% else %}bg-danger{% endif %} ms-2">
+                                {{ "%.2f"|format(supplier.balance) }} جنيه
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('view_supplier', id=supplier.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            إلغاء
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-2"></i>
+                            حفظ التعديلات
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

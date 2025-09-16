@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فاتورة مبيعات - {{ invoice.invoice_number }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            text-align: right;
+            margin: 0;
+            padding: 20px;
+            background: white;
+        }
+        .invoice-header {
+            text-align: center;
+            border-bottom: 3px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .company-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .invoice-title {
+            font-size: 20px;
+            color: #666;
+        }
+        .invoice-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .invoice-info, .customer-info {
+            width: 48%;
+        }
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .info-table th {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border: 1px solid #ddd;
+            font-weight: bold;
+        }
+        .info-table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        .amount-section {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .total-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #28a745;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border: 2px solid #28a745;
+            border-radius: 5px;
+            display: inline-block;
+            min-width: 200px;
+        }
+        .description-section {
+            margin-top: 30px;
+        }
+        .description-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .description-content {
+            border: 1px solid #ddd;
+            padding: 15px;
+            background-color: #f8f9fa;
+            min-height: 60px;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-header">
+        <div class="company-name">نظام إدارة العملاء والموردين</div>
+        <div class="invoice-title">فاتورة مبيعات</div>
+    </div>
+
+    <div class="invoice-details">
+        <div class="invoice-info">
+            <table class="info-table">
+                <tr>
+                    <th>رقم الفاتورة</th>
+                    <td>{{ invoice.invoice_number }}</td>
+                </tr>
+                <tr>
+                    <th>تاريخ الفاتورة</th>
+                    <td>{{ invoice.invoice_date.strftime('%Y-%m-%d') }}</td>
+                </tr>
+                <tr>
+                    <th>تاريخ الطباعة</th>
+                    <td><span id="printDateHeader"></span></td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="customer-info">
+            <table class="info-table">
+                <tr>
+                    <th>اسم العميل</th>
+                    <td>{{ invoice.customer.name }}</td>
+                </tr>
+                <tr>
+                    <th>هاتف العميل</th>
+                    <td>{{ invoice.customer.phone or '-' }}</td>
+                </tr>
+                <tr>
+                    <th>بريد العميل</th>
+                    <td>{{ invoice.customer.email or '-' }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="amount-section">
+        <div>إجمالي المبلغ</div>
+        <div class="total-amount">{{ "{:,.2f}".format(invoice.amount) }} جنيه مصري</div>
+    </div>
+
+    {% if invoice.description %}
+    <div class="description-section">
+        <div class="description-title">وصف الفاتورة:</div>
+        <div class="description-content">{{ invoice.description }}</div>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <p>تم إنشاء هذه الفاتورة بواسطة نظام إدارة العملاء والموردين</p>
+        <p>تاريخ الطباعة: <span id="printDate"></span></p>
+    </div>
+
+    <script>
+        const printDate = new Date().toLocaleDateString('ar-EG');
+        document.getElementById('printDate').textContent = printDate;
+        document.getElementById('printDateHeader').textContent = printDate;
+        window.onload = function() {
+            window.print();
+        };
+    </script>
+</body>
+</html>

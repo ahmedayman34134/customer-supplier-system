@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}عرض فاتورة مبيعات - نظام إدارة العملاء والموردين{% endblock %}
+{% block page_title %}عرض فاتورة مبيعات{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>عرض فاتورة مبيعات</h2>
+    <div>
+        <a href="{{ url_for('edit_sales_invoice', invoice_id=invoice.id) }}" class="btn btn-warning">
+            <i class="fas fa-edit me-2"></i>
+            تعديل الفاتورة
+        </a>
+        <a href="{{ url_for('sales_invoices') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-2"></i>
+            العودة للقائمة
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">تفاصيل الفاتورة رقم: {{ invoice.invoice_number }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="40%">رقم الفاتورة:</th>
+                        <td><strong>{{ invoice.invoice_number }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th>العميل:</th>
+                        <td>{{ invoice.customer.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>هاتف العميل:</th>
+                        <td>{{ invoice.customer.phone or '-' }}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="40%">المبلغ:</th>
+                        <td>
+                            <span class="badge bg-success fs-6">
+                                {{ "{:,.2f}".format(invoice.amount) }} ج.م
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>تاريخ الفاتورة:</th>
+                        <td>{{ invoice.invoice_date.strftime('%Y-%m-%d') }}</td>
+                    </tr>
+                    <tr>
+                        <th>تاريخ الإنشاء:</th>
+                        <td>{{ invoice.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        {% if invoice.description %}
+        <div class="row mt-3">
+            <div class="col-12">
+                <h6>الوصف:</h6>
+                <p class="border p-3 bg-light">{{ invoice.description }}</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <button class="btn btn-primary" onclick="printInvoice()">
+                    <i class="fas fa-print me-2"></i>
+                    طباعة الفاتورة
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function printInvoice() {
+    window.open('/print_sales_invoice/{{ invoice.id }}', '_blank');
+}
+</script>
+{% endblock %}

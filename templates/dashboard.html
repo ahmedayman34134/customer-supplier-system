@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}لوحة التحكم - نظام إدارة العملاء والموردين{% endblock %}
+{% block page_title %}لوحة التحكم{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-3x mb-3"></i>
+                <h3 class="card-title">{{ total_customers }}</h3>
+                <p class="card-text">إجمالي العملاء</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card-success h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-truck fa-3x mb-3"></i>
+                <h3 class="card-title">{{ total_suppliers }}</h3>
+                <p class="card-text">إجمالي الموردين</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card-info h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-money-bill-wave fa-3x mb-3"></i>
+                <h3 class="card-title">{{ "{:,.2f}".format(total_customer_balance) }}</h3>
+                <p class="card-text">رصيد العملاء (لنا)</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card-warning h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-credit-card fa-3x mb-3"></i>
+                <h3 class="card-title">{{ "{:,.2f}".format(total_supplier_balance) }}</h3>
+                <p class="card-text">رصيد الموردين (لهم)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-users me-2"></i>
+                    إدارة العملاء
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">إدارة بيانات العملاء، فواتير المبيعات، والتحصيلات</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('customers') }}" class="btn btn-primary">
+                        <i class="fas fa-eye me-2"></i>
+                        عرض العملاء
+                    </a>
+                    <a href="{{ url_for('add_customer') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-plus me-2"></i>
+                        إضافة عميل جديد
+                    </a>
+                    <a href="{{ url_for('sales_invoices') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-file-invoice me-2"></i>
+                        فواتير المبيعات
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-truck me-2"></i>
+                    إدارة الموردين
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">إدارة بيانات الموردين، فواتير المشتريات، والمدفوعات</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('suppliers') }}" class="btn btn-success">
+                        <i class="fas fa-eye me-2"></i>
+                        عرض الموردين
+                    </a>
+                    <a href="{{ url_for('add_supplier') }}" class="btn btn-outline-success">
+                        <i class="fas fa-plus me-2"></i>
+                        إضافة مورد جديد
+                    </a>
+                    <a href="{{ url_for('purchase_invoices') }}" class="btn btn-outline-success">
+                        <i class="fas fa-file-invoice me-2"></i>
+                        فواتير المشتريات
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    التقارير
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">تقارير مفصلة وشاملة للعملاء والموردين</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('customer_reports') }}" class="btn btn-info">
+                        <i class="fas fa-users me-2"></i>
+                        تقارير العملاء
+                    </a>
+                    <a href="{{ url_for('supplier_reports') }}" class="btn btn-outline-info">
+                        <i class="fas fa-truck me-2"></i>
+                        تقارير الموردين
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-database me-2"></i>
+                    النسخ الاحتياطي
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">إنشاء واستعادة النسخ الاحتياطية للبيانات</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('backup') }}" class="btn btn-warning">
+                        <i class="fas fa-download me-2"></i>
+                        إنشاء نسخة احتياطية
+                    </a>
+                    <button class="btn btn-outline-warning" onclick="document.getElementById('restore-file').click()">
+                        <i class="fas fa-upload me-2"></i>
+                        استعادة نسخة احتياطية
+                    </button>
+                    <input type="file" id="restore-file" style="display: none;" accept=".db" onchange="restoreBackup(this)">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function restoreBackup(input) {
+    if (input.files.length > 0) {
+        const formData = new FormData();
+        formData.append('backup_file', input.files[0]);
+        
+        fetch('/dashboard', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('تم استعادة النسخة الاحتياطية بنجاح');
+                location.reload();
+            } else {
+                alert('حدث خطأ في استعادة النسخة الاحتياطية: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('حدث خطأ في استعادة النسخة الاحتياطية');
+        });
+    }
+}
+</script>
+{% endblock %}

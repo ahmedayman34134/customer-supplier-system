@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}تقارير الموردين - نظام إدارة العملاء والموردين{% endblock %}
+{% block page_title %}تقارير الموردين{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    تقارير الموردين
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h5>إجمالي الموردين</h5>
+                                <h3 class="text-success">{{ supplier_data|length }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h5>إجمالي أرصدة الموردين</h5>
+                                <h3 class="text-danger">{{ "{:,.2f}".format(supplier_data|sum(attribute='balance')) }} ج.م</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">قائمة الموردين التفصيلية</h5>
+        <div>
+            <button class="btn btn-success btn-sm" onclick="exportToExcel()">
+                <i class="fas fa-file-excel me-2"></i>
+                تصدير Excel
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="exportToPDF()">
+                <i class="fas fa-file-pdf me-2"></i>
+                تصدير PDF
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="printReport()">
+                <i class="fas fa-print me-2"></i>
+                طباعة
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover" id="suppliersTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th>الرقم</th>
+                        <th>اسم المورد</th>
+                        <th>الهاتف</th>
+                        <th>البريد الإلكتروني</th>
+                        <th>الرصيد</th>
+                        <th>تاريخ الإضافة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in supplier_data %}
+                    <tr>
+                        <td>{{ data.supplier.id }}</td>
+                        <td>{{ data.supplier.name }}</td>
+                        <td>{{ data.supplier.phone or '-' }}</td>
+                        <td>{{ data.supplier.email or '-' }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'danger' if data.balance > 0 else 'secondary' if data.balance == 0 else 'success' }}">
+                                {{ "{:,.2f}".format(data.balance) }} ج.م
+                            </span>
+                        </td>
+                        <td>{{ data.supplier.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <a href="{{ url_for('supplier_statement', supplier_id=data.supplier.id) }}" class="btn btn-sm btn-info">
+                                <i class="fas fa-file-alt me-1"></i>
+                                كشف حساب
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">لا توجد موردين مسجلين</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function exportToExcel() {
+    fetch('/export_suppliers_excel', {
+        method: 'GET',
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.blob();
+        }
+        throw new Error('Network response was not ok');
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `تقارير_الموردين_${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ في تصدير Excel');
+    });
+}
+
+function exportToPDF() {
+    fetch('/export_suppliers_pdf', {
+        method: 'GET',
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.blob();
+        }
+        throw new Error('Network response was not ok');
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `تقارير_الموردين_${new Date().toISOString().split('T')[0]}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ في تصدير PDF');
+    });
+}
+
+function printReport() {
+    // Hide buttons and other non-printable elements
+    var buttons = document.querySelectorAll('.btn');
+    var navbar = document.querySelector('.navbar');
+    var sidebar = document.querySelector('.sidebar');
+    
+    // Store original display values
+    var originalDisplays = [];
+    buttons.forEach(function(btn, index) {
+        originalDisplays[index] = btn.style.display;
+        btn.style.display = 'none';
+    });
+    
+    if (navbar) {
+        originalDisplays.push(navbar.style.display);
+        navbar.style.display = 'none';
+    }
+    
+    if (sidebar) {
+        originalDisplays.push(sidebar.style.display);
+        sidebar.style.display = 'none';
+    }
+    
+    // Add print styles
+    var printStyle = document.createElement('style');
+    printStyle.innerHTML = `
+        @media print {
+            body { 
+                font-family: Arial, sans-serif !important;
+                direction: rtl !important;
+                margin: 0 !important;
+                padding: 20px !important;
+            }
+            .container-fluid { margin: 0 !important; padding: 0 !important; }
+            .card { border: none !important; box-shadow: none !important; }
+            .card-header { 
+                background: #f8f9fa !important; 
+                border-bottom: 2px solid #333 !important;
+                text-align: center !important;
+                padding: 15px !important;
+            }
+            .table { 
+                width: 100% !important;
+                border-collapse: collapse !important;
+                margin-top: 20px !important;
+            }
+            .table th, .table td { 
+                border: 1px solid #333 !important;
+                padding: 8px !important;
+                text-align: center !important;
+                font-size: 12px !important;
+            }
+            .table th { 
+                background-color: #f2f2f2 !important;
+                font-weight: bold !important;
+            }
+            .btn, .navbar, .sidebar { display: none !important; }
+            .no-print { display: none !important; }
+        }
+    `;
+    document.head.appendChild(printStyle);
+    
+    // Add print header
+    var printHeader = document.createElement('div');
+    printHeader.innerHTML = '<div style="text-align: left; font-size: 12px; margin-bottom: 10px;">تاريخ الطباعة: ' + new Date().toLocaleDateString('ar-EG') + '</div>';
+    document.body.insertBefore(printHeader, document.body.firstChild);
+    
+    // Print
+    window.print();
+    
+    // Restore original display values
+    setTimeout(function() {
+        buttons.forEach(function(btn, index) {
+            btn.style.display = originalDisplays[index];
+        });
+        
+        if (navbar && originalDisplays[buttons.length]) {
+            navbar.style.display = originalDisplays[buttons.length];
+        }
+        
+        if (sidebar && originalDisplays[buttons.length + 1]) {
+            sidebar.style.display = originalDisplays[buttons.length + 1];
+        }
+        
+        // Remove print styles and header
+        document.head.removeChild(printStyle);
+        document.body.removeChild(printHeader);
+    }, 1000);
+}
+</script>
+{% endblock %}
