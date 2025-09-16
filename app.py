@@ -376,25 +376,31 @@ def collections():
 @login_required
 def add_collection():
     if request.method == 'POST':
-        collection = Collection(
-            customer_id=request.form['customer_id'],
-            amount=float(request.form['amount']),
-            collection_date=datetime.strptime(request.form['collection_date'], '%Y-%m-%d').date(),
-            notes=request.form.get('notes'),
-            created_by=current_user.id
-        )
-        
-        # Update customer balance
-        customer = Customer.query.get(collection.customer_id)
-        customer.balance -= collection.amount
-        
-        db.session.add(collection)
-        db.session.commit()
-        flash('تم إضافة التحصيل بنجاح', 'success')
-        return redirect(url_for('collections'))
+        try:
+            collection = Collection(
+                customer_id=request.form['customer_id'],
+                amount=float(request.form['amount']),
+                collection_date=datetime.strptime(request.form['collection_date'], '%Y-%m-%d').date(),
+                notes=request.form.get('notes', ''),
+                created_by=current_user.id
+            )
+            
+            # Update customer balance
+            customer = Customer.query.get(collection.customer_id)
+            if customer:
+                customer.balance -= collection.amount
+            
+            db.session.add(collection)
+            db.session.commit()
+            flash('تم إضافة التحصيل بنجاح', 'success')
+            return redirect(url_for('collections'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ في إضافة التحصيل: {str(e)}', 'error')
+            return redirect(url_for('add_collection'))
     
     customers = Customer.query.filter_by(active=True).all()
-    return render_template('add_collection.html', customers=customers)
+    return render_template('add_collection.html', customers=customers, today=date.today())
 
 
 @app.route('/delete_collection/<int:id>', methods=['POST'])
@@ -427,25 +433,31 @@ def payments():
 @login_required
 def add_payment():
     if request.method == 'POST':
-        payment = Payment(
-            supplier_id=request.form['supplier_id'],
-            amount=float(request.form['amount']),
-            payment_date=datetime.strptime(request.form['payment_date'], '%Y-%m-%d').date(),
-            notes=request.form.get('notes'),
-            created_by=current_user.id
-        )
-        
-        # Update supplier balance
-        supplier = Supplier.query.get(payment.supplier_id)
-        supplier.balance -= payment.amount
-        
-        db.session.add(payment)
-        db.session.commit()
-        flash('تم إضافة الدفع بنجاح', 'success')
-        return redirect(url_for('payments'))
+        try:
+            payment = Payment(
+                supplier_id=request.form['supplier_id'],
+                amount=float(request.form['amount']),
+                payment_date=datetime.strptime(request.form['payment_date'], '%Y-%m-%d').date(),
+                notes=request.form.get('notes', ''),
+                created_by=current_user.id
+            )
+            
+            # Update supplier balance
+            supplier = Supplier.query.get(payment.supplier_id)
+            if supplier:
+                supplier.balance -= payment.amount
+            
+            db.session.add(payment)
+            db.session.commit()
+            flash('تم إضافة الدفع بنجاح', 'success')
+            return redirect(url_for('payments'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ في إضافة الدفع: {str(e)}', 'error')
+            return redirect(url_for('add_payment'))
     
     suppliers = Supplier.query.filter_by(active=True).all()
-    return render_template('add_payment.html', suppliers=suppliers)
+    return render_template('add_payment.html', suppliers=suppliers, today=date.today())
 
 
 

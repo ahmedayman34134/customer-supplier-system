@@ -27,7 +27,7 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="payment_date" class="form-label">تاريخ الدفع *</label>
-                            <input type="date" class="form-control" id="payment_date" name="payment_date" value="{{ today }}" required>
+                            <input type="date" class="form-control" id="payment_date" name="payment_date" value="{{ today.strftime('%Y-%m-%d') if today else '' }}" required>
                         </div>
                     </div>
                     
