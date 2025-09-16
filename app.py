@@ -4,6 +4,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, date
 import os
+import logging
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here-change-in-production')
@@ -12,6 +13,10 @@ if database_url.startswith('postgres://'):
     database_url = database_url.replace('postgres://', 'postgresql://', 1)
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+app.logger.setLevel(logging.DEBUG)
 
 db = SQLAlchemy(app)
 
@@ -377,11 +382,24 @@ def collections():
 def add_collection():
     if request.method == 'POST':
         try:
+            app.logger.debug(f"Form data: {request.form}")
+            
+            customer_id = request.form.get('customer_id')
+            amount = request.form.get('amount')
+            collection_date = request.form.get('collection_date')
+            notes = request.form.get('notes', '')
+            
+            app.logger.debug(f"Customer ID: {customer_id}, Amount: {amount}, Date: {collection_date}")
+            
+            if not customer_id or not amount or not collection_date:
+                flash('جميع الحقول المطلوبة يجب ملؤها', 'error')
+                return redirect(url_for('add_collection'))
+            
             collection = Collection(
-                customer_id=request.form['customer_id'],
-                amount=float(request.form['amount']),
-                collection_date=datetime.strptime(request.form['collection_date'], '%Y-%m-%d').date(),
-                notes=request.form.get('notes', ''),
+                customer_id=int(customer_id),
+                amount=float(amount),
+                collection_date=datetime.strptime(collection_date, '%Y-%m-%d').date(),
+                notes=notes,
                 created_by=current_user.id
             )
             
@@ -389,12 +407,14 @@ def add_collection():
             customer = Customer.query.get(collection.customer_id)
             if customer:
                 customer.balance -= collection.amount
+                app.logger.debug(f"Updated customer {customer.name} balance to {customer.balance}")
             
             db.session.add(collection)
             db.session.commit()
             flash('تم إضافة التحصيل بنجاح', 'success')
             return redirect(url_for('collections'))
         except Exception as e:
+            app.logger.error(f"Error adding collection: {str(e)}")
             db.session.rollback()
             flash(f'حدث خطأ في إضافة التحصيل: {str(e)}', 'error')
             return redirect(url_for('add_collection'))
@@ -434,11 +454,24 @@ def payments():
 def add_payment():
     if request.method == 'POST':
         try:
+            app.logger.debug(f"Payment form data: {request.form}")
+            
+            supplier_id = request.form.get('supplier_id')
+            amount = request.form.get('amount')
+            payment_date = request.form.get('payment_date')
+            notes = request.form.get('notes', '')
+            
+            app.logger.debug(f"Supplier ID: {supplier_id}, Amount: {amount}, Date: {payment_date}")
+            
+            if not supplier_id or not amount or not payment_date:
+                flash('جميع الحقول المطلوبة يجب ملؤها', 'error')
+                return redirect(url_for('add_payment'))
+            
             payment = Payment(
-                supplier_id=request.form['supplier_id'],
-                amount=float(request.form['amount']),
-                payment_date=datetime.strptime(request.form['payment_date'], '%Y-%m-%d').date(),
-                notes=request.form.get('notes', ''),
+                supplier_id=int(supplier_id),
+                amount=float(amount),
+                payment_date=datetime.strptime(payment_date, '%Y-%m-%d').date(),
+                notes=notes,
                 created_by=current_user.id
             )
             
@@ -446,12 +479,14 @@ def add_payment():
             supplier = Supplier.query.get(payment.supplier_id)
             if supplier:
                 supplier.balance -= payment.amount
+                app.logger.debug(f"Updated supplier {supplier.name} balance to {supplier.balance}")
             
             db.session.add(payment)
             db.session.commit()
             flash('تم إضافة الدفع بنجاح', 'success')
             return redirect(url_for('payments'))
         except Exception as e:
+            app.logger.error(f"Error adding payment: {str(e)}")
             db.session.rollback()
             flash(f'حدث خطأ في إضافة الدفع: {str(e)}', 'error')
             return redirect(url_for('add_payment'))
