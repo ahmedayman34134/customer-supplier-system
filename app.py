@@ -7,7 +7,10 @@ import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here-change-in-production')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///customer_supplier.db')
+database_url = os.environ.get('DATABASE_URL', 'sqlite:///customer_supplier.db')
+if database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -961,18 +964,19 @@ def export_suppliers_pdf():
 def backup():
     return render_template('backup.html')
 
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        
-        # Create admin user if it doesn't exist
-        if not User.query.filter_by(username='admin').first():
-            admin_user = User(
-                username='admin',
-                password_hash=generate_password_hash('admin123')
-            )
-            db.session.add(admin_user)
-            db.session.commit()
+# Initialize database and admin user
+with app.app_context():
+    db.create_all()
     
+    # Create admin user if it doesn't exist
+    if not User.query.filter_by(username='admin').first():
+        admin_user = User(
+            username='admin',
+            password_hash=generate_password_hash('admin123')
+        )
+        db.session.add(admin_user)
+        db.session.commit()
+
+if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(debug=False, host='0.0.0.0', port=port)
