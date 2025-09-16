@@ -419,7 +419,7 @@ def add_collection():
             flash(f'حدث خطأ في إضافة التحصيل: {str(e)}', 'error')
             return redirect(url_for('add_collection'))
     
-    customers = Customer.query.filter_by(active=True).all()
+    customers = Customer.query.all()
     return render_template('add_collection.html', customers=customers, today=date.today())
 
 
@@ -491,7 +491,7 @@ def add_payment():
             flash(f'حدث خطأ في إضافة الدفع: {str(e)}', 'error')
             return redirect(url_for('add_payment'))
     
-    suppliers = Supplier.query.filter_by(active=True).all()
+    suppliers = Supplier.query.all()
     return render_template('add_payment.html', suppliers=suppliers, today=date.today())
 
 
